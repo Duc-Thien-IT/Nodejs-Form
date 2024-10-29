@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .question {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Create New Form</h1>
+    <form id="formCreation">
+        <label for="title">Form Title:</label><br>
+        <input type="text" id="title" name="title" required><br><br>
+
+        <label for="description">Description:</label><br>
+        <textarea id="description" name="description" required></textarea><br><br>
+
+        <div id="questionsContainer"></div>
+
+        <button type="button" id="addQuestion">Add Question</button><br><br>
+        <button type="submit">Create Form</button>
+    </form>
+
+    <script>
+        let questions = [];
+
+        document.getElementById('addQuestion').onclick = function() {
+            const questionText = prompt("Enter question text:");
+            const questionType = prompt("Enter question type (text, number, multiple_choice):");
+            const answers = prompt("Enter answers separated by commas:").split(',');
+
+            if (questionText && questionType && answers) {
+                questions.push({ question_text: questionText, question_type: questionType, answers: answers });
+                renderQuestions();
+            }
+        };
+
+        function renderQuestions() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = ''; 
+
+            questions.forEach((question, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question';
+                questionDiv.innerHTML = `
+                    <strong>Question ${index + 1}:</strong>
+                    <p>Text: ${question.question_text}</p>
+                    <p>Type: ${question.question_type}</p>
+                    <p>Answers: ${question.answers.join(', ')}</p>
+                `;
+                container.appendChild(questionDiv);
+            });
+        }
+
+        document.getElementById('formCreation').onsubmit = async function(event) {
+            event.preventDefault();
+
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+
+            const formData = {
+                title,
+                description,
+                questions
+            };
+
+            const response = await fetch('/v1/form', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                alert("Form created successfully!");
+                // Reset the form or redirect
+                document.getElementById('formCreation').reset();
+                questions = [];
+                renderQuestions();
+            } else {
+                const error = await response.json();
+                alert("Error creating form: " + error.message);
+            }
+        };
+    </script>
+
+</body>
+</html>
